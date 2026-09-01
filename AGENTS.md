@@ -2,7 +2,7 @@
 
 High-performance SaaS boilerplate: Go Fiber + Svelte 5 + Inertia.js + SQLite + templ.
 
-> 🔴 **NEVER start dev servers with `bash &` — they die when the call ends.** Use `hub start` for persistent processes (Go server, Vite). Stop with `hub stop` when done.
+> 🔴 **NEVER start dev servers with `bash &` — they die when the call ends.** Use the lifecycle manager (`scripts/dev.sh`) instead of `hub start`. See "Dev server" section below.
 
 ## Architecture
 
@@ -92,7 +92,7 @@ This repo uses multi-template branches. Each branch is **unique and independent*
 
 🔴 **NEVER commit UI/frontend changes without testing in browser.**
 
-- Start dev server with `hub start`, open in browser, confirm render + styling intact.
+- Start dev server with `npm run dev:background`, open in browser, confirm render + styling intact.
 - Check browser console — zero errors required. Console errors = not verified.
 
 - `vite build` passing is NOT enough — it does not catch missing CSS, broken layout, or visual regressions.
@@ -208,6 +208,34 @@ Before writing any frontend code (new pages, components, landing pages):
 - Back navigation: `h.inertiaService.Back(c)` or `h.inertiaService.Back(c, "/fallback")`
 - PUT/PATCH: return JSON for `fetch()`, 303 redirect for `form.put()`
 - `fiber.Map` for adhoc response data. Typed structs for service boundaries.
+
+## Dev server
+
+AI agents use the lifecycle manager (`scripts/dev.sh`), not raw `air` or
+`hub start`. Human developers use `npm run dev:all` (foreground) — agents
+use `dev:background`.
+
+- **Start:** `npm run dev:background` — air + vite jalan detached di
+  background, lock file di `.laju/dev.json` (PID, port, URL). Output
+  "Server ready" muncul saat server siap — tunggu itu sebelum test.
+  Build frontend otomatis jika `dist/.vite` belum ada.
+- **Cek status:** `npm run dev:status` — cek server hidup, port, PID, 3
+  baris log terakhir.
+- **Cek log:** `npm run dev:logs` (50 baris terakhir) atau
+  `bash scripts/dev.sh logs --follow` (tail -f style, blocking).
+- **Stop:** `npm run dev:stop` — graceful SIGTERM, fallback SIGKILL, hapus
+  lock file.
+- **Restart manual:** `npm run dev:restart` (stop + background). HANYA
+  jika: (1) server crash/hang, (2) edit `.env` (env dibaca saat startup,
+  air tidak reload env), (3) edit `.templ` files (air tidak watch `.templ`
+  — run `templ generate` lalu `dev:restart`).
+- **JANGAN restart** setelah edit `.go` files — air sudah auto-rebuild +
+  restart. Tunggu 2-3 detik, lalu `npm run dev:status` untuk konfirmasi.
+- **JANGAN pakai `hub start`** — hub-spawned process tidak pick up air
+  reload dengan benar (code lama tetap running, bug sulit di-debug).
+- **Kalau user sudah nyalakan server sendiri:** biarkan. Jangan stop,
+  jangan restart, jangan nyalakan yang kedua. Pakai `npm run dev:status`
+  untuk detect, atau tanya user port-nya.
 
 ## Testing
 

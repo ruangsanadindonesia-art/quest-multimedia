@@ -3,6 +3,9 @@
 # required by Dockerfile's `COPY go.mod go.sum ./`). Do NOT gitignore it.
 vendor/
 
+# Dev server lifecycle manager
+.laju/
+
 # Environment
 .env
 
