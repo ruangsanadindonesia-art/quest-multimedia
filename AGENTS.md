@@ -2,7 +2,7 @@
 
 High-performance SaaS boilerplate: Go Fiber + Svelte 5 + Inertia.js + SQLite + templ.
 
-> 🔴 **NEVER start dev servers with `bash &` — they die when the call ends.** Use the lifecycle manager (`scripts/dev.sh`) instead of `hub start`. See "Dev server" section below.
+> 🔴 **NEVER start dev servers with `bash &` — they die when the call ends.** Use the lifecycle manager (`scripts/dev.mjs`) instead of `hub start`. See "Dev server" section below.
 
 ## Architecture
 
@@ -211,7 +211,7 @@ Before writing any frontend code (new pages, components, landing pages):
 
 ## Dev server
 
-AI agents use the lifecycle manager (`scripts/dev.sh`), not raw `air` or
+AI agents use the lifecycle manager (`scripts/dev.mjs`), not raw `air` or
 `hub start`. Human developers use `npm run dev:all` (foreground) — agents
 use `dev:background`.
 
@@ -222,7 +222,7 @@ use `dev:background`.
 - **Cek status:** `npm run dev:status` — cek server hidup, port, PID, 3
   baris log terakhir.
 - **Cek log:** `npm run dev:logs` (50 baris terakhir) atau
-  `bash scripts/dev.sh logs --follow` (tail -f style, blocking).
+  `node scripts/dev.mjs logs --follow` (tail -f style, blocking).
 - **Stop:** `npm run dev:stop` — graceful SIGTERM, fallback SIGKILL, hapus
   lock file.
 - **Restart manual:** `npm run dev:restart` (stop + background). HANYA
