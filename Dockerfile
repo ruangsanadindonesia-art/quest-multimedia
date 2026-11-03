@@ -3,7 +3,7 @@ WORKDIR /build
 COPY package*.json ./
 RUN npm ci
 COPY frontend/ frontend/
-COPY tsconfig*.json vite.config.* ./
+COPY vite.config.js ./
 RUN npm run build
 
 FROM golang:1.26-alpine AS backend

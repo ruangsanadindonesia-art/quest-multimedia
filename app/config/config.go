@@ -87,6 +87,17 @@ func (c *Config) GetDSN() string {
 	return fmt.Sprintf("file:%s?_foreign_keys=on", c.DBPath)
 }
 
+// Validate rejects unsafe production defaults before the application starts.
+func (c *Config) Validate() error {
+    if c.AppEnv == "production" {
+        secret := strings.TrimSpace(c.SessionSecret)
+        if secret == "change-this-in-production" || len(secret) < 32 {
+            return fmt.Errorf("SESSION_SECRET must be a unique value with at least 32 characters in production")
+        }
+    }
+    return nil
+}
+
 func (c *Config) IsDevelopment() bool {
 	return c.AppEnv == "development"
 }
