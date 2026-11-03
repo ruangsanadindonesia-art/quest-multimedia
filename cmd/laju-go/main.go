@@ -46,6 +46,10 @@ func main() {
 
 	// Load configuration
 	cfg := config.Load()
+    if err := cfg.Validate(); err != nil {
+        slog.Error("invalid application configuration", "error", err)
+        os.Exit(1)
+    }
 
 	logLevel := slog.LevelInfo
 	if cfg.AppEnv == "development" {

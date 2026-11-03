@@ -61,12 +61,12 @@ func getViteServerURL(vitePortPath string) string {
 }
 
 // getEntryPoint returns the Vite entry point from VITE_ENTRY env var.
-// Defaults to "src/main.ts" (Svelte/Vue). React templates set VITE_ENTRY=src/main.tsx.
+// Defaults to "src/main.tsx" for Quest Multimedia (React). Override with VITE_ENTRY if needed.
 func getEntryPoint() string {
 	if entry := os.Getenv("VITE_ENTRY"); entry != "" {
 		return entry
 	}
-	return "src/main.ts"
+	return "src/main.tsx"
 }
 
 // loadManifest loads the Vite manifest file

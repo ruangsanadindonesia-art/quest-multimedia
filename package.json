@@ -1,7 +1,7 @@
 {
   "name": "laju-go",
   "version": "1.0.0",
-  "description": "Laju Go - High-performance SaaS boilerplate built with Go Fiber, Svelte 5, and Inertia.js",
+  "description": "Quest Multimedia starter - Go Fiber, React, Inertia.js, and SQLite",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,28 +24,31 @@
     "db:migrate:down": "go run github.com/pressly/goose/v3/cmd/goose@latest -dir migrations sqlite3 ./data/app.db down",
     "db:migrate:create": "go run github.com/pressly/goose/v3/cmd/goose@latest -dir migrations sqlite3 create",
     "db:generate": "sqlc generate",
-    "verify": "templ generate && vite build && go build -o /dev/null ./cmd/laju-go && go vet ./... && go test ./..."
+    "verify": "npm run typecheck && npm run build && go build ./cmd/laju-go && go vet ./... && go test ./...",
+    "typecheck": "tsc --noEmit --project frontend/tsconfig.json"
   },
   "author": "Maulana Shalihin",
   "license": "MIT",
   "dependencies": {
-    "@inertiajs/svelte": "^3.0.0",
+    "@inertiajs/react": "^3.0.0",
     "axios": "^1.13.6",
     "dayjs": "^1.11.20",
     "dotenv": "^17.3.1",
-    "lucide-svelte": "^1.0.1",
+    "lucide-react": "^1.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
     "@inertiajs/vite": "^3.0.0",
-    "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@tailwindcss/vite": "^4.2.2",
-    "@tsconfig/svelte": "^5.0.4",
     "@types/node": "^25.5.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "rimraf": "^6.1.3",
-    "svelte": "^5.55.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.3"
   }

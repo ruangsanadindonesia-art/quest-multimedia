@@ -1,0 +1,79 @@
+name: Verify Quest Multimedia
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/verify.yml"
+      - "app/**"
+      - "cmd/**"
+      - "frontend/**"
+      - "routes/**"
+      - "templates/**"
+      - "migrations/**"
+      - "package.json"
+      - "package-lock.json"
+      - "go.mod"
+      - "go.sum"
+      - "vite.config.js"
+      - "Dockerfile"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    name: Frontend and Go verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Typecheck React
+        run: npm run typecheck
+      - name: Build React
+        run: npm run build
+      - name: Go vet
+        run: go vet ./...
+      - name: Go tests
+        run: go test ./...
+      - name: Build Go
+        run: go build -o /tmp/quest-multimedia-verify ./cmd/laju-go
+      - name: Local app identity smoke
+        shell: bash
+        run: |
+          APP_ENV=production SESSION_SECRET="ci-only-temporary-secret-with-more-than-32-characters" DB_PATH=/tmp/quest-multimedia-smoke.db APP_PORT=18080 /tmp/quest-multimedia-verify > /tmp/quest-multimedia-smoke.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 25); do
+            if curl --silent --fail http://127.0.0.1:18080/login -o /tmp/quest-multimedia-login.html; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            tail -n 40 /tmp/quest-multimedia-smoke.log
+            exit 1
+          fi
+          grep -q 'id="app"' /tmp/quest-multimedia-login.html
+          grep -q '/assets/' /tmp/quest-multimedia-login.html
+          echo "Local login HTML and asset references verified"
+
+  docker:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (no push or deployment)
+        run: docker build --tag quest-multimedia-ci .
