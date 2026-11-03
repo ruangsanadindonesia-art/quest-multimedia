@@ -4,12 +4,19 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/maulanashalihin/laju-go/app/questops"
 	"github.com/maulanashalihin/laju-go/app/services"
 	"github.com/maulanashalihin/laju-go/app/session"
 )
+
+func questID(c *fiber.Ctx,key string)int64{
+	v,err:=strconv.ParseInt(c.Params(key),10,64)
+	if err!=nil||v<1{return 0}
+	return v
+}
 
 type QuestHandler struct {
 	operations *questops.Store
@@ -80,7 +87,7 @@ func (h *QuestHandler) AssignContent(c *fiber.Ctx)error{
 	if err!=nil{return h.fail(c,err)}
 	var req questops.AssignInput
 	if err=c.BodyParser(&req);err!=nil{return c.Status(400).JSON(fiber.Map{"error":"Format task tidak valid"})}
-	id,err:=h.operations.AssignContentTask(c.UserContext(),actor,int64(c.ParamsInt("id")),req)
+	id,err:=h.operations.AssignContentTask(c.UserContext(),actor,questID(c,"id"),req)
 	if err!=nil{return h.fail(c,err)}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"ok":true,"task_id":id})
 }
@@ -88,7 +95,7 @@ func (h *QuestHandler) AssignContent(c *fiber.Ctx)error{
 func (h *QuestHandler) StartTask(c *fiber.Ctx)error{
 	actor,err:=h.identity(c)
 	if err!=nil{return h.fail(c,err)}
-	return h.ok(c,h.operations.StartTask(c.UserContext(),actor,int64(c.ParamsInt("id"))))
+	return h.ok(c,h.operations.StartTask(c.UserContext(),actor,questID(c,"id")))
 }
 
 func (h *QuestHandler) SetChecklist(c *fiber.Ctx)error{
@@ -97,7 +104,7 @@ func (h *QuestHandler) SetChecklist(c *fiber.Ctx)error{
 	var req struct{Checked bool `json:"checked"`}
 	if err=c.BodyParser(&req);err!=nil{return c.Status(400).JSON(fiber.Map{"error":"Format checklist tidak valid"})}
 	return h.ok(c,h.operations.SetChecklist(c.UserContext(),actor,
-		int64(c.ParamsInt("id")),int64(c.ParamsInt("item")),req.Checked))
+		questID(c,"id"),questID(c,"item"),req.Checked))
 }
 
 func (h *QuestHandler) SubmitTask(c *fiber.Ctx)error{
@@ -105,13 +112,13 @@ func (h *QuestHandler) SubmitTask(c *fiber.Ctx)error{
 	if err!=nil{return h.fail(c,err)}
 	var req struct {ResultURL string `json:"result_url"`}
 	if err=c.BodyParser(&req);err!=nil{return c.Status(400).JSON(fiber.Map{"error":"Format hasil tidak valid"})}
-	return h.ok(c,h.operations.SubmitTask(c.UserContext(),actor,int64(c.ParamsInt("id")),req.ResultURL))
+	return h.ok(c,h.operations.SubmitTask(c.UserContext(),actor,questID(c,"id"),req.ResultURL))
 }
 
 func (h *QuestHandler) ApproveTask(c *fiber.Ctx)error{
 	actor,err:=h.identity(c)
 	if err!=nil{return h.fail(c,err)}
-	return h.ok(c,h.operations.ApproveTask(c.UserContext(),actor,int64(c.ParamsInt("id"))))
+	return h.ok(c,h.operations.ApproveTask(c.UserContext(),actor,questID(c,"id")))
 }
 
 func (h *QuestHandler) Revision(c *fiber.Ctx)error{
@@ -119,7 +126,7 @@ func (h *QuestHandler) Revision(c *fiber.Ctx)error{
 	if err!=nil{return h.fail(c,err)}
 	var req struct{Note string `json:"note"`}
 	if err=c.BodyParser(&req);err!=nil{return c.Status(400).JSON(fiber.Map{"error":"Format revisi tidak valid"})}
-	return h.ok(c,h.operations.ReturnTaskForRevision(c.UserContext(),actor,int64(c.ParamsInt("id")),req.Note))
+	return h.ok(c,h.operations.ReturnTaskForRevision(c.UserContext(),actor,questID(c,"id"),req.Note))
 }
 
 func (h *QuestHandler) Replan(c *fiber.Ctx)error{
@@ -127,7 +134,7 @@ func (h *QuestHandler) Replan(c *fiber.Ctx)error{
 	if err!=nil{return h.fail(c,err)}
 	var req struct{Due string `json:"due"`; Note string `json:"note"`}
 	if err=c.BodyParser(&req);err!=nil{return c.Status(400).JSON(fiber.Map{"error":"Format keputusan tidak valid"})}
-	return h.ok(c,h.operations.Replan(c.UserContext(),actor,int64(c.ParamsInt("id")),req.Due,req.Note))
+	return h.ok(c,h.operations.Replan(c.UserContext(),actor,questID(c,"id"),req.Due,req.Note))
 }
 
 func (h *QuestHandler) RejectException(c *fiber.Ctx)error{
@@ -135,7 +142,7 @@ func (h *QuestHandler) RejectException(c *fiber.Ctx)error{
 	if err!=nil{return h.fail(c,err)}
 	var req struct{Note string `json:"note"`}
 	if err=c.BodyParser(&req);err!=nil{return c.Status(400).JSON(fiber.Map{"error":"Format alasan tidak valid"})}
-	return h.ok(c,h.operations.RejectException(c.UserContext(),actor,int64(c.ParamsInt("id")),req.Note))
+	return h.ok(c,h.operations.RejectException(c.UserContext(),actor,questID(c,"id"),req.Note))
 }
 
 func (h *QuestHandler) SetMember(c *fiber.Ctx)error{
