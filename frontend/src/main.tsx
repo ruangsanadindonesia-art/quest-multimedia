@@ -8,10 +8,11 @@ import { createInertiaApp } from "@inertiajs/react";
 // Dynamic import is required: /@react-refresh is a Vite virtual module
 // that only exists in dev — a static import would break production builds.
 if (import.meta.env.DEV) {
+	// @ts-expect-error Vite supplies this virtual module only during development.
 	const { injectIntoGlobalHook } = await import("/@react-refresh");
 	injectIntoGlobalHook(window);
 	window.$RefreshReg$ = () => {};
-	window.$RefreshSig$ = () => {};
+	window.$RefreshSig$ = () => () => undefined;
 }
 
 createInertiaApp();
