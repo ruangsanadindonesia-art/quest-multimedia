@@ -137,6 +137,7 @@ func main() {
 		Auth:   handlers.NewAuthHandler(authService, sessionStore, inertiaService, mailerService),
 		App:    handlers.NewAppHandler(userService, sessionStore, inertiaService),
 		Upload: uploadHandler,
+		Quest: handlers.NewQuestHandler(db,sessionStore,inertiaService),
 	}
 
 	// Setup password reset handler

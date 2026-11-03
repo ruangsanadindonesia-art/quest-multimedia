@@ -17,6 +17,7 @@ type Handlers struct {
 	App           *handlers.AppHandler
 	Upload        *handlers.UploadHandler
 	PasswordReset *handlers.PasswordResetHandler
+	Quest         *handlers.QuestHandler
 }
 
 func SetupRoutes(app *fiber.App, handlers Handlers, store *session.Store, userService *services.UserService, mailerService *services.MailerService, csrfMiddleware *middlewares.CSRFMiddleware) {
@@ -30,7 +31,7 @@ func SetupRoutes(app *fiber.App, handlers Handlers, store *session.Store, userSe
 	setupAuthRoutes(app, handlers.Auth, handlers.PasswordReset, store, mailerService, csrfMiddleware)
 
 	// Setup app routes (protected)
-	setupAppRoutes(app, handlers.App, handlers.Upload, store, userService, csrfMiddleware)
+	setupAppRoutes(app, handlers.App, handlers.Upload, handlers.Quest, store, userService, csrfMiddleware)
 }
 
 func setupStaticRoutes(app *fiber.App) {
@@ -101,13 +102,29 @@ func setupAuthRoutes(app *fiber.App, authHandler *handlers.AuthHandler, password
 	app.Get("/verify-email/:token", authHandler.VerifyEmail)
 }
 
-func setupAppRoutes(app *fiber.App, appHandler *handlers.AppHandler, uploadHandler *handlers.UploadHandler, store *session.Store, userService *services.UserService, csrfMiddleware *middlewares.CSRFMiddleware) {
+func setupAppRoutes(app *fiber.App, appHandler *handlers.AppHandler, uploadHandler *handlers.UploadHandler, questHandler *handlers.QuestHandler, store *session.Store, userService *services.UserService, csrfMiddleware *middlewares.CSRFMiddleware) {
 	// Protected app routes with CSRF protection
 	protected := app.Group("/app", middlewares.AuthRequired(store), middlewares.NoCache())
 	protected.Use(csrfMiddleware.Protect())
 
 	// Dashboard
-	protected.Get("/", appHandler.Dashboard)
+	protected.Get("/", questHandler.Workspace)
+	protected.Get("/quest", questHandler.Workspace)
+
+	// Quest actions inherit session auth and CSRF protection from the /app group.
+	protected.Post("/quest/sidequests", questHandler.CreateSidequest)
+	protected.Post("/quest/contents", questHandler.CreateContent)
+	protected.Post("/quest/contents/:id/tasks", questHandler.AssignContent)
+	protected.Post("/quest/tasks/:id/start", questHandler.StartTask)
+	protected.Post("/quest/tasks/:id/submit", questHandler.SubmitTask)
+	protected.Post("/quest/tasks/:id/checklist/:item", questHandler.SetChecklist)
+	protected.Post("/quest/tasks/:id/approve", questHandler.ApproveTask)
+	protected.Post("/quest/tasks/:id/revision", questHandler.Revision)
+	protected.Post("/quest/exceptions/:id/replan", questHandler.Replan)
+	protected.Post("/quest/exceptions/:id/reject", questHandler.RejectException)
+	protected.Post("/quest/members", questHandler.SetMember)
+	protected.Post("/quest/capacity", questHandler.SetCapacity)
+	protected.Post("/quest/policies", questHandler.SetPolicy)
 
 	// Profile
 	protected.Get("/profile", appHandler.Profile)
