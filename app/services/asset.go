@@ -33,6 +33,7 @@ type AssetService struct {
 	manifestPath  string
 	vitePortPath  string
 	viteServerURL string
+	entryPoint    string // Vite entry point (e.g. "src/main.ts" or "src/main.tsx")
 	isDevEnv      bool
 	mu            sync.RWMutex
 }
@@ -43,6 +44,7 @@ func NewAssetService(manifestPath string, vitePortPath string, isDevEnv bool) *A
 		manifestPath:  manifestPath,
 		vitePortPath:  vitePortPath,
 		viteServerURL: getViteServerURL(vitePortPath),
+		entryPoint:    getEntryPoint(),
 		isDevEnv:      isDevEnv,
 	}
 	service.loadManifest()
@@ -56,6 +58,15 @@ func getViteServerURL(vitePortPath string) string {
 		return "" // File not found (production or Vite not running)
 	}
 	return strings.TrimSpace(string(data))
+}
+
+// getEntryPoint returns the Vite entry point from VITE_ENTRY env var.
+// Defaults to "src/main.ts" (Svelte/Vue). React templates set VITE_ENTRY=src/main.tsx.
+func getEntryPoint() string {
+	if entry := os.Getenv("VITE_ENTRY"); entry != "" {
+		return entry
+	}
+	return "src/main.ts"
 }
 
 // loadManifest loads the Vite manifest file
@@ -149,12 +160,17 @@ func (s *AssetService) IsDevelopment() bool {
 
 // GetMainJS returns the main JS asset path
 func (s *AssetService) GetMainJS() string {
-	return s.GetJS("src/main.ts")
+	return s.GetJS(s.entryPoint)
 }
 
 // GetMainCSS returns the main CSS asset path
 func (s *AssetService) GetMainCSS() string {
-	return s.GetCSS("src/main.ts")
+	return s.GetCSS(s.entryPoint)
+}
+
+// GetEntryPoint returns the Vite entry point (e.g. "src/main.ts" or "src/main.tsx")
+func (s *AssetService) GetEntryPoint() string {
+	return s.entryPoint
 }
 
 // GetAssetData returns a fiber.Map with Vite/asset data for templates

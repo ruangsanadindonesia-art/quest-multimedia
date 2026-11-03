@@ -111,9 +111,9 @@ func renderInertiaHTML(c *fiber.Ctx, page *fiberinertia.Page, assetService *Asse
     <script data-page="app" type="application/json">%s</script>
     <script type="module" src="%s/@vite/client"></script>
     <link rel="stylesheet" href="%s/src/app.css">
-    <script type="module" src="%s/src/main.ts"></script>
+    <script type="module" src="%s/%s"></script>
 </body>
-</html>`, title, csrfToken, pageJSON, viteURL, viteURL, viteURL)
+</html>`, title, csrfToken, pageJSON, viteURL, viteURL, viteURL, assetService.GetEntryPoint())
 	} else {
 		html = fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">

@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
+import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import inertia from "@inertiajs/vite";
 import "dotenv/config";
@@ -8,7 +8,7 @@ import { writeFileSync, rmSync } from "fs";
 
 // Vite entry point - build JS and CSS as separate entries
 const input = {
-	main: resolve(__dirname, "frontend/src/main.ts"),
+	main: resolve(__dirname, "frontend/src/main.tsx"),
 	app: resolve(__dirname, "frontend/src/app.css"),
 };
 
@@ -25,7 +25,7 @@ export default defineConfig({
 	},
 	plugins: [
 		tailwindcss(),
-		svelte(),
+		react(),
 		inertia(),
 		{
 			name: "write-port",
