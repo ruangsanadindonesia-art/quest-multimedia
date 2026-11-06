@@ -24,3 +24,25 @@ func TestValidateProductionSessionSecret(t *testing.T) {
         })
     }
 }
+
+func TestPublicRegistrationPolicy(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		env string
+		override string
+		want bool
+	}{
+		{"development default", "development", "", true},
+		{"production default", "production", "", false},
+		{"production explicit true", "production", "true", true},
+		{"production explicit false", "production", "false", false},
+		{"unexpected value fails closed", "production", "1", false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("ALLOW_PUBLIC_REGISTRATION", tt.override)
+			if got := publicRegistrationAllowed(tt.env); got != tt.want {
+				t.Fatalf("publicRegistrationAllowed(%q) = %t; want %t", tt.env, got, tt.want)
+			}
+		})
+	}
+}
