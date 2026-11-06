@@ -19,30 +19,39 @@ type AuthHandler struct {
 	store          *session.Store
 	inertiaService *services.InertiaService
 	mailerService  *services.MailerService
+	publicRegistrationEnabled bool
 }
 
-func NewAuthHandler(authService *services.AuthService, store *session.Store, inertiaService *services.InertiaService, mailerService *services.MailerService) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, store *session.Store, inertiaService *services.InertiaService, mailerService *services.MailerService, publicRegistrationEnabled bool) *AuthHandler {
 	return &AuthHandler{
 		authService:    authService,
 		store:          store,
 		inertiaService: inertiaService,
 		mailerService:  mailerService,
+		publicRegistrationEnabled: publicRegistrationEnabled,
 	}
 }
 
 func (h *AuthHandler) ShowLoginForm(c *fiber.Ctx) error {
 	return h.inertiaService.Render(c, "auth/Login", fiber.Map{
 		"Title": "Login",
+		"publicRegistrationEnabled": h.publicRegistrationEnabled,
 	})
 }
 
 func (h *AuthHandler) ShowRegisterForm(c *fiber.Ctx) error {
+	if !h.publicRegistrationEnabled {
+		return fiber.ErrNotFound
+	}
 	return h.inertiaService.Render(c, "auth/Register", fiber.Map{
 		"Title": "Register",
 	})
 }
 
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
+	if !h.publicRegistrationEnabled {
+		return fiber.ErrNotFound
+	}
 	var req models.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -144,6 +153,9 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
+	if !h.publicRegistrationEnabled {
+		return fiber.ErrNotFound
+	}
 	state, err := generateState()
 	if err != nil {
 		slog.Error("failed to generate OAuth state", "error", err)
@@ -166,6 +178,9 @@ func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
+	if !h.publicRegistrationEnabled {
+		return fiber.ErrNotFound
+	}
 	state := c.Query("state")
 	code := c.Query("code")
 
