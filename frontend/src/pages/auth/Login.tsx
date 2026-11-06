@@ -6,9 +6,10 @@ import type { Flash } from "@lib/types";
 
 interface Props {
     flash?: Flash;
+    publicRegistrationEnabled?: boolean;
 }
 
-export default function Login({ flash }: Props) {
+export default function Login({ flash, publicRegistrationEnabled = false }: Props) {
     const form = useForm({
         email: "",
         password: "",
@@ -34,7 +35,7 @@ export default function Login({ flash }: Props) {
             ]}
             flash={flash}
         >
-            <a
+            {publicRegistrationEnabled && <a
                 href="/auth/google"
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-neutral-300 dark:border-white/[0.08] bg-white dark:bg-neutral-800/50 text-neutral-700 dark:text-white font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900"
             >
@@ -57,16 +58,16 @@ export default function Login({ flash }: Props) {
                     />
                 </svg>
                 Continue with Google
-            </a>
+            </a>}
 
-            <div className="relative my-8">
+            {publicRegistrationEnabled && <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-neutral-200/80 dark:border-white/[0.04]"></div>
                 </div>
                 <div className="relative flex justify-center">
                     <span className="px-4 text-sm text-neutral-500 bg-white dark:bg-neutral-925">or continue with email</span>
                 </div>
-            </div>
+            </div>}
 
             <form className="space-y-5" onSubmit={submitForm}>
                 <div className="space-y-2">
@@ -151,7 +152,7 @@ export default function Login({ flash }: Props) {
                 </button>
             </form>
 
-            <p className="mt-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
+            {publicRegistrationEnabled && <p className="mt-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
                 Don't have an account?
                 <Link
                     href="/register"
@@ -159,7 +160,7 @@ export default function Login({ flash }: Props) {
                 >
                     Create one
                 </Link>
-            </p>
+            </p>}
         </AuthLayout>
     );
 }

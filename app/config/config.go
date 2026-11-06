@@ -13,6 +13,7 @@ import (
 type Config struct {
 	AppPort            string
 	AppEnv             string
+	AllowPublicRegistration bool
 	DBPath             string
 	SessionSecret      string
 	GoogleClientID     string
@@ -39,9 +40,11 @@ func Load() *Config {
 		slog.Warn("no .env file found, using environment variables")
 	}
 
+	appEnv := getEnv("APP_ENV", "development")
 	c := &Config{
 		AppPort:            getEnv("APP_PORT", "8080"),
-		AppEnv:             getEnv("APP_ENV", "development"),
+		AppEnv:             appEnv,
+		AllowPublicRegistration: publicRegistrationAllowed(appEnv),
 		DBPath:             getEnv("DB_PATH", "./data/app.db"),
 		SessionSecret:      getEnv("SESSION_SECRET", "change-this-in-production"),
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
@@ -61,6 +64,15 @@ func Load() *Config {
 	}
 
 	return c
+}
+
+// Production defaults to closed registration; development preserves the demo flow.
+func publicRegistrationAllowed(appEnv string) bool {
+    v := strings.TrimSpace(os.Getenv("ALLOW_PUBLIC_REGISTRATION"))
+    if v == "" {
+        return appEnv == "development"
+    }
+    return strings.EqualFold(v, "true")
 }
 
 func getEnv(key, defaultValue string) string {

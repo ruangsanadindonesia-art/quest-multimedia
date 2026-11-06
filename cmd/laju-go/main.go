@@ -134,7 +134,7 @@ func main() {
 	uploadHandler := handlers.NewUploadHandler(sessionStore, userService, "storage/uploads")
 	routeHandlers := routes.Handlers{
 		Public: handlers.NewPublicHandler(authService, userService, inertiaService, assetService),
-		Auth:   handlers.NewAuthHandler(authService, sessionStore, inertiaService, mailerService),
+		Auth:   handlers.NewAuthHandler(authService, sessionStore, inertiaService, mailerService, cfg.AllowPublicRegistration),
 		App:    handlers.NewAppHandler(userService, sessionStore, inertiaService),
 		Upload: uploadHandler,
 		Quest: handlers.NewQuestHandler(db,sessionStore,inertiaService),

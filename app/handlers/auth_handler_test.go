@@ -20,8 +20,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupTestApp(t *testing.T) (*fiber.App, *queries.Querier) {
+func setupTestApp(t *testing.T, registrationEnabled ...bool) (*fiber.App, *queries.Querier) {
 	t.Helper()
+	allowRegistration := true
+	if len(registrationEnabled) > 0 {
+		allowRegistration = registrationEnabled[0]
+	}
 
 	db, err := sql.Open("sqlite3", ":memory:?_pragma=journal_mode(WAL)")
 	require.NoError(t, err)
@@ -59,10 +63,12 @@ func setupTestApp(t *testing.T) (*fiber.App, *queries.Querier) {
 	mailerSvc := services.NewMailerService(querier, services.MailConfig{Driver: services.MailDriverLog}, "http://localhost:8080")
 
 	app := fiber.New()
-	h := NewAuthHandler(authSvc, store, inertiaSvc, mailerSvc)
+	h := NewAuthHandler(authSvc, store, inertiaSvc, mailerSvc, allowRegistration)
 	app.Get("/login", h.ShowLoginForm)
 	app.Get("/register", h.ShowRegisterForm)
 	app.Post("/register", h.Register)
+	app.Get("/auth/google", h.GoogleLogin)
+	app.Get("/auth/google/callback", h.GoogleCallback)
 	app.Post("/login", h.Login)
 	app.Get("/logout", h.Logout)
 
@@ -217,4 +223,33 @@ func TestLogout(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusSeeOther, logoutResp.StatusCode)
 	assert.Equal(t, "/login", logoutResp.Header.Get("Location"))
+}
+
+func TestRegistrationClosed(t *testing.T) {
+	app, querier := setupTestApp(t, false)
+
+	for _, tt := range []struct {
+		method string
+		path   string
+	}{
+		{http.MethodGet, "/register"},
+		{http.MethodPost, "/register"},
+		{http.MethodGet, "/auth/google"},
+		{http.MethodGet, "/auth/google/callback?state=x&code=y"},
+	} {
+		t.Run(tt.method+" "+tt.path, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, tt.path, strings.NewReader(`{"name":"Blocked","email":"blocked@example.com","password":"Pass1234"}`))
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := app.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+		})
+	}
+
+	_, err := querier.GetUserByEmail(context.Background(), "blocked@example.com")
+	require.ErrorIs(t, err, queries.ErrUserNotFound)
+
+	loginResp, err := app.Test(httptest.NewRequest(http.MethodGet, "/login", nil))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 }
